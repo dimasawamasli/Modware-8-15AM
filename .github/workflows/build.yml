@@ -1,0 +1,46 @@
+name: Build ModwareInject
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil repo
+        uses: actions/checkout@v4
+
+      - name: Pasang Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Pasang Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Siapkan file APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/ModwareInject.apk
+
+      - name: Simpan APK (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ModwareInject.apk
+          path: dist/ModwareInject.apk
+
+      - name: Buat Release supaya APK bisa diunduh langsung
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${
